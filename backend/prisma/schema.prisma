@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────
+
+enum UserRole {
+  admin
+  asesora
+}
+
+enum LeadStatus {
+  nuevo
+  pendiente_llamada
+  contactado
+  no_contesta
+  seguimiento
+  cerrado
+}
+
+enum CaseStatus {
+  nuevo
+  pendiente_llamada
+  contactado
+  no_contesta
+  seguimiento
+  cerrado
+}
+
+// ─── Users ────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(asesora)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedLeads  Lead[]          @relation("AssignedLeads")
+  auditLogs      AuditLog[]      @relation("UserAuditLog")
+  callLogs       CallLog[]       @relation("UserCallLog")
+  statusChanges  StatusHistory[] @relation("UserStatusHistory")
+
+  @@map("users")
+}
+
+// ─── Lead Sources ─────────────────────────────────────────
+
+model LeadSource {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String?
+  leads       Lead[]
+
+  @@map("lead_sources")
+}
+
+// ─── Leads ────────────────────────────────────────────────
+
+model Lead {
+  id             String      @id @default(uuid())
+  name           String
+  phone          String
+  email          String?
+  sourceId       String?
+  status         LeadStatus  @default(nuevo)
+  assignedUserId String?
+  assignedAt     DateTime?
+  externalId     String?     @unique  // Identificador externo para deduplicación
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  source       LeadSource?        @relation(fields: [sourceId], references: [id])
+  assignedUser User?              @relation("AssignedLeads", fields: [assignedUserId], references: [id])
+  client       Client?            @relation("ClientFromLead")
+  cases        Case[]             @relation("CaseFromLead")
+
+  @@map("leads")
+}
+
+// ─── Clients ──────────────────────────────────────────────
+
+model Client {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String?
+  leadId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead  Lead   @relation("ClientFromLead", fields: [leadId], references: [id])
+  cases Case[]
+
+  @@map("clients")
+}
+
+// ─── Cases (Pipeline) ────────────────────────────────────
+
+model Case {
+  id        String     @id @default(uuid())
+  clientId  String
+  leadId    String?
+  status    CaseStatus @default(nuevo)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  client  Client         @relation(fields: [clientId], references: [id])
+  lead    Lead?          @relation("CaseFromLead", fields: [leadId], references: [id])
+  calls   CallLog[]
+  history StatusHistory[]
+
+  @@map("cases")
+}
+
+// ─── Call Logs ────────────────────────────────────────────
+
+model CallLog {
+  id           String   @id @default(uuid())
+  caseId       String
+  userId      String
+  date         DateTime
+  duration     Int      // minutos
+  result       String
+  observations String?
+  createdAt    DateTime @default(now())
+
+  case Case @relation(fields: [caseId], references: [id])
+  user User @relation("UserCallLog", fields: [userId], references: [id])
+
+  @@map("call_logs")
+}
+
+// ─── Status History ───────────────────────────────────────
+
+model StatusHistory {
+  id             String      @id @default(uuid())
+  caseId         String
+  previousStatus CaseStatus?
+  newStatus      CaseStatus
+  userId        String
+  createdAt      DateTime    @default(now())
+
+  case Case @relation(fields: [caseId], references: [id])
+  user User @relation("UserStatusHistory", fields: [userId], references: [id])
+
+  @@map("status_history")
+}
+
+// ─── Audit Logs ───────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId   String?
+  action    String   // CREATE | UPDATE | DELETE | ACTIVATE | DEACTIVATE | LOGIN | CONVERT_LEAD | UPDATE_STATUS
+  entity    String   // user | lead | client | case | call_log
+  entityId  String?
+  details   String?  // JSON serializado con contexto de la operación
+  createdAt DateTime @default(now())
+
+  user User? @relation("UserAuditLog", fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
