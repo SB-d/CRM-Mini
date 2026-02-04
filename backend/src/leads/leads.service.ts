@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AssignmentService } from './assignment.service';
 import { AuditService } from '../audit/audit.service';
@@ -18,7 +18,6 @@ export class LeadsService {
     source?: string;
     externalId?: string;
   }) {
-    // Deduplicación por externalId (campo que envía Zapier/n8n)
     if (data.externalId) {
       const existing = await this.prisma.lead.findUnique({
         where: { externalId: data.externalId },
@@ -28,7 +27,6 @@ export class LeadsService {
       }
     }
 
-    // Deduplicación por teléfono
     const phoneExists = await this.prisma.lead.findFirst({
       where: { phone: data.phone },
     });
@@ -36,7 +34,6 @@ export class LeadsService {
       throw new ConflictException('Lead duplicado: teléfono ya existe');
     }
 
-    // Buscar o crear fuente de lead
     let sourceId: string | null = null;
     if (data.source) {
       let source = await this.prisma.leadSource.findFirst({
@@ -50,7 +47,6 @@ export class LeadsService {
       sourceId = source.id;
     }
 
-    // Asignación automática round-robin
     const assignedUserId = await this.assignment.getNextAsesora();
     const now = new Date();
 
@@ -80,21 +76,52 @@ export class LeadsService {
     return lead;
   }
 
-  async findAll(userId?: string, role?: string) {
+  async findAll(
+    userId?: string,
+    role?: string,
+    filters?: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      sourceId?: string;
+      assignedUserId?: string;
+      from?: string;
+      to?: string;
+    },
+  ) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
     const where: any = {};
+
     if (role === 'asesora' && userId) {
       where.assignedUserId = userId;
     }
+    if (filters?.status) where.status = filters.status;
+    if (filters?.sourceId) where.sourceId = filters.sourceId;
+    if (filters?.assignedUserId) where.assignedUserId = filters.assignedUserId;
 
-    return this.prisma.lead.findMany({
-      where,
-      include: {
-        assignedUser: { select: { name: true } },
-        source: true,
-        client: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (filters?.from || filters?.to) {
+      where.createdAt = {};
+      if (filters.from) where.createdAt.gte = new Date(filters.from);
+      if (filters.to) where.createdAt.lte = new Date(filters.to);
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.lead.findMany({
+        where,
+        include: {
+          assignedUser: { select: { name: true } },
+          source: true,
+          client: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.lead.count({ where }),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   async findOne(id: string) {
@@ -114,6 +141,28 @@ export class LeadsService {
     });
   }
 
+  async update(
+    id: string,
+    data: { name?: string; phone?: string; email?: string; observations?: string },
+    actorId: string,
+  ) {
+    const lead = await this.prisma.lead.findUnique({ where: { id } });
+    if (!lead) throw new NotFoundException('Lead no encontrado');
+
+    const updated = await this.prisma.lead.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+        ...(data.email !== undefined && { email: data.email }),
+        ...(data.observations !== undefined && { observations: data.observations }),
+      },
+    });
+
+    await this.audit.log(actorId, 'UPDATE', 'lead', id, data);
+    return updated;
+  }
+
   async getDistribution() {
     const asesoras = await this.prisma.user.findMany({
       where: { role: 'asesora' },
@@ -131,5 +180,9 @@ export class LeadsService {
         return { ...a, totalLeads, activeLeads };
       }),
     );
+  }
+
+  async getSources() {
+    return this.prisma.leadSource.findMany({ orderBy: { name: 'asc' } });
   }
 }

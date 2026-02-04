@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -9,7 +9,6 @@ import { LeadsService } from './leads.service';
 export class LeadsController {
   constructor(private leadsService: LeadsService) {}
 
-  // Endpoint público: acepta API Key (Zapier/n8n) o Bearer Token
   @UseGuards(LeadAuthGuard)
   @Post()
   async create(
@@ -26,21 +25,54 @@ export class LeadsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Request() req: any) {
-    return this.leadsService.findAll(req.user.id, req.user.role);
+  async findAll(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('sourceId') sourceId?: string,
+    @Query('assignedUserId') assignedUserId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.leadsService.findAll(req.user.id, req.user.role, {
+      page: page ? parseInt(page) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      status,
+      sourceId,
+      assignedUserId,
+      from,
+      to,
+    });
   }
 
-  // distribution DEBE estar antes que :id para que no se capture como parámetro
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles('admin', 'supervisor')
   @Get('distribution')
   async getDistribution() {
     return this.leadsService.getDistribution();
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('sources')
+  async getSources() {
+    return this.leadsService.getSources();
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.leadsService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'supervisor')
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: { name?: string; phone?: string; email?: string; observations?: string },
+    @Request() req: any,
+  ) {
+    return this.leadsService.update(id, body, req.user.id);
   }
 }

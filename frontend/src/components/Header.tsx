@@ -1,10 +1,7 @@
 export default function Header({ userName, userRole, onLogout }: { userName: string; userRole: string; onLogout: () => void }) {
   return (
     <header className="header">
-      <div className="header-logo">
-        CRM <span>Mini</span>
-      </div>
-      <div className="header-right">
+      <div className="header-right" style={{ marginLeft: 'auto' }}>
         <div className="header-user">
           {userName}
           <span className="role-badge">{userRole}</span>

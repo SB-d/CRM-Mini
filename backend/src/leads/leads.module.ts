@@ -9,6 +9,6 @@ import { LeadAuthGuard } from '../auth/lead-auth.guard';
   imports: [AuthModule],
   providers: [LeadsService, AssignmentService, LeadAuthGuard],
   controllers: [LeadsController],
-  exports: [LeadsService],
+  exports: [LeadsService, AssignmentService],
 })
 export class LeadsModule {}

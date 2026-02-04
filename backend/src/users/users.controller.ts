@@ -24,6 +24,16 @@ export class UsersController {
   }
 
   @Roles('admin')
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: { role?: string; password?: string; isActive?: boolean },
+    @Request() req: any,
+  ) {
+    return this.usersService.update(id, body, req.user.id);
+  }
+
+  @Roles('admin')
   @Put(':id/toggle')
   async toggle(
     @Param('id') id: string,

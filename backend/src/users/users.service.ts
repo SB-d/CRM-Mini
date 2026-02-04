@@ -45,6 +45,33 @@ export class UsersService {
     return this.sanitize(user);
   }
 
+  async update(
+    id: string,
+    data: { role?: string; password?: string; isActive?: boolean },
+    actorId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const updateData: any = {};
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.password) updateData.password = await bcrypt.hash(data.password, 10);
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+    });
+
+    await this.audit.log(actorId, 'UPDATE', 'user', id, {
+      ...(data.role && { role: data.role }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      passwordChanged: !!data.password,
+    });
+
+    return this.sanitize(updated);
+  }
+
   async toggleActive(id: string, isActive: boolean, actorId: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
