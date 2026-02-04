@@ -33,6 +33,18 @@ enum CaseStatus {
   cerrado
 }
 
+enum ManagementType {
+  llamada_realizada
+  no_contesta
+  numero_equivocado
+  cliente_interesado
+  cliente_no_interesado
+  reagendar
+  seguimiento
+  cierre_de_caso
+  observacion_interna
+}
+
 // ─── Users ────────────────────────────────────────────────
 
 model User {
@@ -49,6 +61,7 @@ model User {
   auditLogs      AuditLog[]      @relation("UserAuditLog")
   callLogs       CallLog[]       @relation("UserCallLog")
   statusChanges  StatusHistory[] @relation("UserStatusHistory")
+  caseNotes      CaseNote[]      @relation("UserCaseNotes")
 
   @@map("users")
 }
@@ -120,8 +133,30 @@ model Case {
   lead    Lead?          @relation("CaseFromLead", fields: [leadId], references: [id])
   calls   CallLog[]
   history StatusHistory[]
+  notes   CaseNote[]
 
   @@map("cases")
+}
+
+// ─── Case Notes (Bitácora) ───────────────────────────────
+
+model CaseNote {
+  id               String         @id @default(uuid())
+  caseId           String
+  userId          String
+  role             UserRole
+  managementType   ManagementType
+  content          String
+  statusSnapshot   String
+  nextFollowUpDate DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  annulledAt       DateTime?
+
+  case  Case @relation(fields: [caseId], references: [id])
+  user  User @relation("UserCaseNotes", fields: [userId], references: [id])
+
+  @@map("case_notes")
 }
 
 // ─── Call Logs ────────────────────────────────────────────

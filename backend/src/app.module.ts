@@ -9,6 +9,7 @@ import { CasesModule } from './cases/cases.module';
 import { CallsModule } from './calls/calls.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ManualLoadModule } from './manual-load/manual-load.module';
+import { CaseNotesModule } from './case-notes/case-notes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ManualLoadModule } from './manual-load/manual-load.module';
     CallsModule,
     DashboardModule,
     ManualLoadModule,
+    CaseNotesModule,
   ],
 })
 export class AppModule {}

@@ -19,7 +19,7 @@ export default function Sidebar() {
 
   return (
     <nav className="sidebar">
-      <div className="sidebar-logo">CRM <span>Mini</span></div>
+      <div className="sidebar-logo"><img src="/Logo-Suenos-light.svg" alt="Sueños" /></div>
       <ul className="sidebar-nav">
         {items.map(item => (
           <li key={item.path}>

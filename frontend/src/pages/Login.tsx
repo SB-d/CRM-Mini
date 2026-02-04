@@ -32,7 +32,7 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>CRM <span style={{ color: '#2563eb' }}>Mini</span></h1>
+        <img src="/Logo-Suenos-light.svg" alt="Sueños" style={{ width: '140px', margin: '0 auto 12px', display: 'block' }} />
         <p className="subtitle">Sistema de gestión de leads y call center</p>
 
         <form onSubmit={handleSubmit}>

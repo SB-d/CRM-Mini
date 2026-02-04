@@ -29,7 +29,7 @@ body {
 
 /* ─── Header ─────────────────────────────────────────────── */
 .header {
-  background: #1e293b;
+  background: #3245a5;
   color: white;
   padding: 0 24px;
   height: 60px;
@@ -37,16 +37,6 @@ body {
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.header-logo {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-.header-logo span {
-  color: #60a5fa;
 }
 
 .header-right {
@@ -178,7 +168,7 @@ tr:hover td {
 .btn:hover { filter: brightness(0.92); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
 
-.btn-primary   { background: #2563eb; color: white; }
+.btn-primary   { background: #3245a5; color: white; }
 .btn-danger    { background: #dc2626; color: white; }
 .btn-success   { background: #16a34a; color: white; }
 .btn-secondary { background: #e2e8f0; color: #334155; }
@@ -205,7 +195,7 @@ tr:hover td {
 }
 
 .tab:hover   { background: #e2e8f0; }
-.tab.active  { background: #2563eb; color: white; }
+.tab.active  { background: #3245a5; color: white; }
 
 /* ─── Forms ──────────────────────────────────────────────── */
 .form-group {
@@ -232,8 +222,8 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  border-color: #00e3cc;
+  box-shadow: 0 0 0 3px rgba(0, 227, 204, 0.22);
 }
 
 textarea { resize: vertical; min-height: 60px; }
@@ -244,7 +234,7 @@ textarea { resize: vertical; min-height: 60px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: linear-gradient(135deg, #3245a5 0%, #1e2d7a 100%);
   padding: 24px;
 }
 
@@ -260,7 +250,7 @@ textarea { resize: vertical; min-height: 60px; }
 .login-card h1 {
   font-size: 26px;
   font-weight: 700;
-  color: #1e293b;
+  color: #3245a5;
   margin-bottom: 4px;
 }
 
@@ -317,7 +307,7 @@ textarea { resize: vertical; min-height: 60px; }
 }
 
 .lead-item:hover       { background: #f8fafc; }
-.lead-item.selected    { background: #eff6ff; border-left: 3px solid #2563eb; }
+.lead-item.selected    { background: #edfafa; border-left: 3px solid #00e3cc; }
 
 .lead-item-name {
   font-weight: 600;
@@ -389,7 +379,7 @@ textarea { resize: vertical; min-height: 60px; }
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #2563eb;
+  background: #00e3cc;
   margin-top: 6px;
   flex-shrink: 0;
 }
@@ -466,7 +456,7 @@ textarea { resize: vertical; min-height: 60px; }
 /* ─── Sidebar ────────────────────────────────────────────── */
 .sidebar {
   width: 240px;
-  background: #1e293b;
+  background: #3245a5;
   color: white;
   display: flex;
   flex-direction: column;
@@ -476,14 +466,12 @@ textarea { resize: vertical; min-height: 60px; }
 
 .sidebar-logo {
   padding: 20px 24px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
 }
 
-.sidebar-logo span {
-  color: #60a5fa;
+.sidebar-logo img {
+  width: 140px;
+  display: block;
 }
 
 .sidebar-nav {
@@ -519,9 +507,11 @@ textarea { resize: vertical; min-height: 60px; }
 }
 
 .sidebar-item.active {
-  background: #2563eb;
+  background: rgba(0, 227, 204, 0.18);
   color: white;
   font-weight: 600;
+  border-left: 3px solid #00e3cc;
+  padding-left: 11px;
 }
 
 .sidebar-icon {
@@ -571,4 +561,70 @@ textarea { resize: vertical; min-height: 60px; }
 
 .pipeline-card:hover {
   box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+/* ─── Notes / Bitácora ──────────────────────────────────── */
+.notes-layout {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.notes-chat {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 340px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.note-item.note-annulled {
+  opacity: 0.5;
+}
+
+.note-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.note-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.notes-input-box {
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.notes-input-box textarea {
+  resize: vertical;
 }
